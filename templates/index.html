@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Game{% endblock %}
+
+{% block content %}
+<div class="jumbotron text-center">
+  <div class="container">
+    <h1 class="display-4">Quiz Game</h1>
+    <p class="lead">Want to play?</p>
+    <hr class="my-4" />
+    <p>
+      You've found the right place! Checkout my webpage and play my quiz!
+    </p>
+    <a
+      class="btn btn-warning btn-lg"
+      href="{{ url_for('add') }}"
+      role="button"
+      >Show Me!</a
+    >
+  </div>
+</div>
+
+{% endblock %}
