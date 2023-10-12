@@ -15,12 +15,14 @@ data = response.json()
 question_data = data["results"]
 
 
-def add_question():
+def add():
     for item in question_data:
         try:
-            decoded_question = html.unescape(item['question'])
-            database.add_question(decoded_question, item['category'], item['type'])
+            decoded_question = html.unescape(item["question"])
+            database.add_question(decoded_question, item["category"], item["type"])
             new_question = database.Question.query.filter_by(question=decoded_question).first()
-            database.add_answer(item['correct_answer'], new_question.id)
+            # TODO: add multiple incorrect answer, not only one
+            print(type(item["incorrect_answers"][0]))
+            database.add_answer(item["correct_answer"], item["incorrect_answers"][0], new_question.id)
         except sqlalchemy.exc.IntegrityError:
             database.db.session.rollback()
