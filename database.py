@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
@@ -46,13 +47,20 @@ def add_answer(correct_answer, incorrect_answer, question_id):
     db.session.commit()
 
 
-class User(db.Model):
-    userid = db.Column(db.String(100), primary_key=True)
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False, unique=True)
     # TODO: store as a hash or other secure way
-    Password = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    admin = db.Column(db.Boolean, nullable=False)
     # relationship
     quiz = db.relationship("Quiz", backref="user")
     answered_quiz = db.relationship("AnsweredQuiz", backref="user")
+
+    def __init__(self, username, password, admin):
+        self.username = username
+        self.password = password
+        self.admin = admin
 
 
 class Quiz(db.Model):
@@ -70,12 +78,12 @@ class Quiz(db.Model):
     question8 = db.Column(db.Integer, db.ForeignKey("question.id"))
     question9 = db.Column(db.Integer, db.ForeignKey("question.id"))
     question10 = db.Column(db.Integer, db.ForeignKey("question.id"))
-    userid = db.Column(db.String(100), db.ForeignKey("user.userid"))
+    userid = db.Column(db.String(100), db.ForeignKey("user.id"))
 
 
 class AnsweredQuiz(db.Model):
     rating = db.Column(db.Integer)
     score = db.Column(db.Integer, nullable=False)
-    userid = db.Column(db.String(100), db.ForeignKey("user.userid"), primary_key=True)
+    userid = db.Column(db.String(100), db.ForeignKey("user.id"), primary_key=True)
     quizid = db.Column(db.Integer, db.ForeignKey("quiz.id"), primary_key=True)
     # category = db.Column(db.String(100), nullable=False)

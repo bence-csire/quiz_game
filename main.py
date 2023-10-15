@@ -1,13 +1,15 @@
-# TODO: check the correct order for imports
-from flask import Flask, render_template
+# Import order. Is it okay like this?
+# TODO: add requirements file
+from flask import Flask, render_template, url_for, redirect
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SubmitField
-from wtforms.validators import DataRequired
-from flask import Flask
+from wtforms import StringField, SubmitField, PasswordField, BooleanField
+from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bootstrap import Bootstrap5
+from flask_bcrypt import Bcrypt
+from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 import database
 import trivia
-# from flask_sqlalchemy import SQLAlchemy
+import question
 
 # TODO: Create and access DB. TODO: Get questions from TRIVIA and add it to my DB. How many request can I make to
 #   TRIVIA a day? How many questions should I take daily? 50-100?
@@ -18,41 +20,47 @@ import trivia
 app = Flask(__name__)
 # TODO: make it a real secret key
 app.secret_key = "any-string-you-want-just-keep-it-secret"
-
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///questions.db"
 database.init_app(app)
 Bootstrap5(app)
+bcrypt = Bcrypt(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
 
-class QuestionForm(FlaskForm):
-    type_ = SelectField(u"Type", choices=[("True/False", "True/False"),
-                                          ("Single Choice", "Single Choice"),
-                                          ("Short Answer", "Short Answer"),
-                                          ("Numeric", "Numeric")], validators=[DataRequired()])
-    question = StringField("Question", validators=[DataRequired()])
-    category = SelectField(u"Category", choices=[("General Knowledge", "General Knowledge"),
-                                                 ("Entertainment: Books", "Entertainment: Books"),
-                                                 ("Entertainment: Film", "Entertainment: Film"),
-                                                 ("Entertainment: Music", "Entertainment: Music"),
-                                                 ("Entertainment: Musicals & Theatres", "Entertainment: Musicals & Theatres"),
-                                                 ("Entertainment: Television", "Entertainment: Television"),
-                                                 ("Entertainment: Video Games", "Entertainment: Video Games"),
-                                                 ("Entertainment: Board Games", "Entertainment: Board Games"),
-                                                 ("Science & Nature", "Science & Nature"),
-                                                 ("Science: Computers", "Science: Computers"),
-                                                 ("Science: Mathematics", "Science: Mathematics"),
-                                                 ("Mythology", "Mythology"),
-                                                 ("Sports", "Sports"),
-                                                 ("Geography", "Geography"),
-                                                 ("History", "History"),
-                                                 ("Politics", "Politics"),
-                                                 ("Art", "Art"),
-                                                 ("Celebrities", "Celebrities"),
-                                                 ("Animals", "Animals")],
-                           validators=[DataRequired()])
-    correct_answer = StringField("Correct Answer", validators=[DataRequired()])
-    incorrect_answer = StringField("Wrong Answers (comma separated)")
-    submit = SubmitField("Submit")
+@login_manager.user_loader
+def load_user(user_id):
+    # TODO: query.get old, new one is session.get, make it work
+    return database.User.query.get(int(user_id))
+
+
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    print(current_user)
+    return redirect(url_for("home"))
+
+
+class RegisterForm(FlaskForm):
+    username = StringField(validators=[InputRequired(), Length(min=4, max=100)], render_kw={"placeholder": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min=4, max=25)], render_kw={"placeholder": "Password"})
+    # TODO: admin is not visible, make it work
+    admin = BooleanField("Admin?")
+    submit = SubmitField("Register")
+
+    def validate_username(self, username):
+        existing_user_username = database.User.query.filter_by(username=username.data).first()
+        if existing_user_username:
+            raise ValidationError("That username already exists. Please choose a different one.")
+
+
+class LoginForm(FlaskForm):
+    username = StringField(validators=[InputRequired(), Length(min=4, max=100)], render_kw={"placeholder": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min=4, max=25)], render_kw={"placeholder": "Password"})
+    submit = SubmitField("Login")
 
 
 @app.route("/")
@@ -60,15 +68,46 @@ def home():
     return render_template("index.html")
 
 
+# TODO: After adding a question the input fields should be empty and give some feedback
 @app.route("/add", methods=["GET", "POST"])
+@login_required
 def add():
-    form = QuestionForm()
+    if current_user.admin:
+        form = question.QuestionForm()
+        print(form.question.data)
+        if form.validate_on_submit():
+            database.add_question(form.question.data, form.category.data, form.type_.data)
+            new_question = database.Question.query.filter_by(question=form.question.data).first()
+            database.add_answer(form.correct_answer.data, form.incorrect_answer.data, new_question.id)
+            return render_template("add.html", form=form)
+        return render_template("add.html", form=form)
+    else:
+        return render_template("admin.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    form = LoginForm()
     if form.validate_on_submit():
-        database.add_question(form.question.data, form.category.data, form.type_.data)
-        new_question = database.Question.query.filter_by(question=form.question.data).first()
-        database.add_answer(form.correct_answer.data, form.incorrect_answer.data, new_question.id)
-        return render_template("index.html")
-    return render_template("add.html", form=form)
+        user = database.User.query.filter_by(username=form.username.data).first()
+        # TODO: popup for wrong username/password
+        if user:
+            if bcrypt.check_password_hash(user.password, form.password.data):
+                login_user(user)
+                return redirect(url_for("add"))
+    return render_template("login.html", form=form)
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data)
+        new_user = database.User(username=form.username.data, password=hashed_password, admin=form.admin.data)
+        database.db.session.add(new_user)
+        database.db.session.commit()
+        return redirect(url_for("login"))
+    return render_template("register.html", form=form)
 
 
 with app.app_context():

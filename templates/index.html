@@ -8,13 +8,19 @@
     <p class="lead">Want to play?</p>
     <hr class="my-4" />
     <p>
-      You've found the right place! Checkout my webpage and play my quiz!
+      You've found the right place! Login or register and play my quiz!
     </p>
     <a
       class="btn btn-warning btn-lg"
-      href="{{ url_for('add') }}"
+      href="{{ url_for('login') }}"
       role="button"
-      >Show Me!</a
+      >Login</a
+    >
+    <a
+      class="btn btn-warning btn-lg"
+      href="{{ url_for('register') }}"
+      role="button"
+      >Register</a
     >
   </div>
 </div>

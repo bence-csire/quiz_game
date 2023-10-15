@@ -6,15 +6,9 @@
 <div class="container">
   <div class="row">
     <div class="col-sm-12 col-md-8">
-      <h1>Add a new question into the database</h1>
-
-      {{ render_form(form, novalidate=True) }}
-
+        <h1>Add a new question into the database</h1>
       <p class="space-above">
-        <a href="{{ url_for('home') }}">Homepage</a>
-      </p>
-      <p class="space-above">
-        <a href="{{ url_for('logout') }}">Press here to logout</a>
+        <a href="{{ url_for('logout') }}">No permission, please login with admin user</a>
       </p>
     </div>
   </div>
