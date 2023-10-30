@@ -1,0 +1,18 @@
+Projekt
+
+Functionality:
+1. Playing quiz on one page. The user should be able to request different type of questions (multiple choice or true/flase) from trivia. Also topic should be switchable (like general, sport, history, IT etc). What other functions Trivia has which would be useable? Used technologies: API requests, some kind of UI, score tracking.
+2. Creating quiz on another page. The admin should be able to submit questions based on a template. Should be more type of question templates, like in quiznights. After that, the users should be able to play the quiz based on the submitted questions. (how to store the submitted questions, DB structure. How to create the quiz from the submitted questions? Randomly or based on submit time?) Used technologies: RestAPI, SQL, Flask, Jinja, WTForm 
+3. Create a page with some kind of statistics about the submitted questions or about the questions the users answered in 1. point. Used technologies: Pandas, Numpy, Matplotlib, Plotly, SQL.
+4. User feedback page. They can rate the quiz (all in all or question by question, how to store the ratings in DB) 
+5. User login, and the users should have their own page. Used techologies: Flask-Login, JWT, DB?
+6. Modelling leaderboard, sharing, email notification. How is it possible to become this like a real function in a locally hosted quiz page or is it okay to just modelling it, but not a real functionality in this case?
+7. Automated testing with pytest
+8. Logging
+
+Possible functions, I am not sure how to achive them:
+9. Quiz recommendations for users, based on their previous xp.
+10. "Multiplayer", time based quiz
+11. Security
+
+

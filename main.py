@@ -1,6 +1,6 @@
 # Import order. Is it okay like this?
 # TODO: add requirements file
-from flask import Flask, render_template, url_for, redirect
+from flask import Flask, render_template, url_for, redirect, session
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField
 from wtforms.validators import InputRequired, Length, ValidationError
@@ -9,7 +9,6 @@ from flask_bcrypt import Bcrypt
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 
 import database
-import play
 import question
 import quiz
 import trivia
@@ -117,25 +116,24 @@ def register():
 @app.route("/quiz", methods=["GET", "POST"])
 @login_required
 def choose_quiz():
-    form = quiz.QuizForm()
+    form = quiz.QuizCategorySelection()
     # TODO: category should be the chosen one from the list
 
     if form.validate_on_submit():
         category = form.category.data
-        play.create_quiz(category)
-        return render_template("play.html", form=form)
+        questions = quiz.create_quiz(category)
+        session["questions"] = questions
+        return redirect(url_for("play_quiz"))
     return render_template("quiz.html", form=form)
 
 
-# @app.route("/play", methods=["GET", "POST"])
-# @login_required
-# def play_quiz():
-#     questions = database.db.session.query(database.Question).filter(database.Question.q_category == "General",
-#                                                                     database.Question.type == "single choice").all()
-#     for q in questions:
-#         print(
-#             f"ID: {q.ID}, Question: {q.question}, Category: {q.q_category}, Type: {q.type}")
-#     render_template("admin.html")
+@app.route("/play", methods=["GET", "POST"])
+@login_required
+def play_quiz():
+    form = quiz.QuizForm()
+    questions = session.get("questions")
+    print(questions)
+    return render_template("play.html", form=form)
 
 
 with app.app_context():
