@@ -50,7 +50,6 @@ def add_answer(correct_answer, incorrect_answer, question_id):
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False, unique=True)
-    # TODO: store as a hash or other secure way
     password = db.Column(db.String(100), nullable=False)
     admin = db.Column(db.Boolean, nullable=False)
     # relationship

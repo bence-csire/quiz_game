@@ -4,6 +4,7 @@ import database
 
 
 # TODO: if all topics then choose from everywhere
+# TODO: Check if it is possible to simplify it?
 def create_quiz(category):
     true_false_questions = database.db.session.query(database.Question).filter(database.Question.q_category == category,
                                                                                database.Question.type == "boolean").order_by(
