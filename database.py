@@ -54,7 +54,6 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(100), nullable=False)
     admin = db.Column(db.Boolean, nullable=False)
     # relationship
-    quiz = db.relationship("Quiz", backref="user")
     answered_quiz = db.relationship("AnsweredQuiz", backref="user")
 
     def __init__(self, username, password, admin):
@@ -78,7 +77,22 @@ class Quiz(db.Model):
     question8 = db.Column(db.Integer, db.ForeignKey("question.id"))
     question9 = db.Column(db.Integer, db.ForeignKey("question.id"))
     question10 = db.Column(db.Integer, db.ForeignKey("question.id"))
-    userid = db.Column(db.String(100), db.ForeignKey("user.id"))
+
+    def __init__(self, category, random, question1, question2, question3, question4, question5, question6, question7,
+                 question8, question9, question10):
+        self.category = category
+        # TODO: Create quiz randomly or create it manually by adding questions to it
+        self.random = random
+        self.question1 = question1
+        self.question2 = question2
+        self.question3 = question3
+        self.question4 = question4
+        self.question5 = question5
+        self.question6 = question6
+        self.question7 = question7
+        self.question8 = question8
+        self.question9 = question9
+        self.question10 = question10
 
 
 class AnsweredQuiz(db.Model):

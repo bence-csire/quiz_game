@@ -7,17 +7,16 @@ from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bootstrap import Bootstrap5
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
+
 import database
-import trivia
+import play
 import question
+import quiz
+import trivia
 
-# TODO: Create and access DB. TODO: Get questions from TRIVIA and add it to my DB. How many request can I make to
-#   TRIVIA a day? How many questions should I take daily? 50-100?
-# TODO: Create a form where an "admin" can submit questions (they have to be logged in) (what type of questions).
-#   Save this questions into DB.
-# TODO: Create a page where a user would be able to play the quiz
-
-# github test
+# TODO: create an automatic job which gets questions from trivia. How many request can I make to TRIVIA a day?
+#  How many questions should I take daily? 50-100?
+# TODO: create a page where a user would be able to play the quiz
 
 app = Flask(__name__)
 # TODO: make it a real secret key
@@ -42,16 +41,17 @@ def load_user(user_id):
 @login_required
 def logout():
     logout_user()
-    print(current_user)
     return redirect(url_for("home"))
 
 
+# TODO: create a new .py file for user (modularization)
 class RegisterForm(FlaskForm):
     username = StringField(validators=[InputRequired(), Length(min=4, max=100)], render_kw={"placeholder": "Username"})
     password = PasswordField(validators=[InputRequired(), Length(min=4, max=25)], render_kw={"placeholder": "Password"})
     # TODO: admin is not visible, make it work
     admin = BooleanField("Admin?")
     submit = SubmitField("Register")
+    # TODO: popup for successful registration
 
     def validate_username(self, username):
         existing_user_username = database.User.query.filter_by(username=username.data).first()
@@ -71,12 +71,12 @@ def home():
 
 
 # TODO: After adding a question the input fields should be empty and give some feedback
+# TODO: make sure the added questions has the same string format (e.g Pascal or everything small)
 @app.route("/add", methods=["GET", "POST"])
 @login_required
 def add():
     if current_user.admin:
         form = question.QuestionForm()
-        print(form.question.data)
         if form.validate_on_submit():
             database.add_question(form.question.data, form.category.data, form.type_.data)
             new_question = database.Question.query.filter_by(question=form.question.data).first()
@@ -87,6 +87,7 @@ def add():
         return render_template("admin.html")
 
 
+# TODO: add the login form to the user.py file
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -100,6 +101,7 @@ def login():
     return render_template("login.html", form=form)
 
 
+# TODO: add the register form to the user.py file
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
@@ -110,6 +112,30 @@ def register():
         database.db.session.commit()
         return redirect(url_for("login"))
     return render_template("register.html", form=form)
+
+
+@app.route("/quiz", methods=["GET", "POST"])
+@login_required
+def choose_quiz():
+    form = quiz.QuizForm()
+    # TODO: category should be the chosen one from the list
+
+    if form.validate_on_submit():
+        category = form.category.data
+        play.create_quiz(category)
+        return render_template("play.html", form=form)
+    return render_template("quiz.html", form=form)
+
+
+# @app.route("/play", methods=["GET", "POST"])
+# @login_required
+# def play_quiz():
+#     questions = database.db.session.query(database.Question).filter(database.Question.q_category == "General",
+#                                                                     database.Question.type == "single choice").all()
+#     for q in questions:
+#         print(
+#             f"ID: {q.ID}, Question: {q.question}, Category: {q.q_category}, Type: {q.type}")
+#     render_template("admin.html")
 
 
 with app.app_context():
