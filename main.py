@@ -17,6 +17,8 @@ import question
 #   Save this questions into DB.
 # TODO: Create a page where a user would be able to play the quiz
 
+# github test
+
 app = Flask(__name__)
 # TODO: make it a real secret key
 app.secret_key = "any-string-you-want-just-keep-it-secret"
