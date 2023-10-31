@@ -121,8 +121,8 @@ def choose_quiz():
 
     if form.validate_on_submit():
         category = form.category.data
-        questions = quiz.create_quiz(category)
-        session["questions"] = questions
+        questions_dict = quiz.create_quiz(category)
+        session["questions_dict"] = questions_dict
         return redirect(url_for("play_quiz"))
     return render_template("quiz.html", form=form)
 
@@ -130,10 +130,9 @@ def choose_quiz():
 @app.route("/play", methods=["GET", "POST"])
 @login_required
 def play_quiz():
+    questions_dictionary = session.get("questions_dict")
     form = quiz.QuizForm()
-    questions = session.get("questions")
-    print(questions)
-    return render_template("play.html", form=form)
+    return render_template("play.html", form=form, questions_dictionary=questions_dictionary)
 
 
 with app.app_context():

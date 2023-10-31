@@ -8,7 +8,12 @@
     <div class="col-sm-12 col-md-8">
       <h1>Play quiz! Enjoy!</h1>
 
-      {{ render_form(form, novalidate=True) }}
+      <ul>
+        {% for key, value in questions_dictionary.items() %}
+        <h2>{{ value["question"] }}</h2>
+        {{ render_form(form, novalidate=True) }}
+        {% endfor %}
+      </ul>
 
       <p class="space-above">
         <a href="{{ url_for('home') }}">Homepage</a>

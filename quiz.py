@@ -32,23 +32,27 @@ class QuizCategorySelection(FlaskForm):
     submit = SubmitField("Submit")
 
 
+# class QuizForm(FlaskForm):
+#     select_field = SelectField('Choose an option', choices=[("True", "True"), ("False", "False")])
+
+
 class QuizForm(FlaskForm):
-    answer1 = SelectField("Answer", choices=[("True", "True"), ("False", "False")])
-    answer2 = SelectField("Answer", choices=[("True", "True"), ("False", "False")])
-    answer3 = SelectField("Answer", choices=[("True", "True"), ("False", "False")])
-    answer4 = SelectField("Answer", choices=[("True", "True"), ("False", "False")])
+    question1 = SelectField("question", choices=[("True", "True"), ("False", "False")])
+    question2 = SelectField("question", choices=[("True", "True"), ("False", "False")])
+    question3 = SelectField("question", choices=[("True", "True"), ("False", "False")])
+    question4 = SelectField("question", choices=[("True", "True"), ("False", "False")])
     # TODO: the answers should be the correct and incorrect answers from answer table in a random order
-    answer5 = SelectField("Answer", choices=[("True", "True"), ("False", "False")])
-    answer6 = SelectField("Answer", choices=[("True", "True"), ("False", "False")])
-    answer7 = StringField(render_kw={"placeholder": "Answer7"})
-    answer8 = StringField(render_kw={"placeholder": "Answer8"})
-    answer9 = StringField(render_kw={"placeholder": "Answer9"})
-    answer10 = StringField(render_kw={"placeholder": "Answer10"})
+    question5 = SelectField("question", choices=[("True", "True"), ("False", "False")])
+    question6 = SelectField("question", choices=[("True", "True"), ("False", "False")])
+    question7 = StringField(render_kw={"placeholder": "question"})
+    question8 = StringField(render_kw={"placeholder": "question"})
+    question9 = StringField(render_kw={"placeholder": "question"})
+    question10 = StringField(render_kw={"placeholder": "question"})
 
 
 # TODO: if all topics then choose from everywhere
 # TODO: Check if it is possible to simplify it?
-# TODO: Admin user can submit quiz by giving question ID-s (not random)
+# TODO: Add function where admin user can submit quiz by giving question ID-s (not random)
 # TODO: Create a list with the answers
 def create_quiz(category):
     true_false_questions = database.db.session.query(database.Question).filter(database.Question.q_category == category,
@@ -69,4 +73,19 @@ def create_quiz(category):
                              numeric_questions[0].id, numeric_questions[1].id)
     database.db.session.add(new_quiz)
     database.db.session.commit()
-    return true_false_questions, single_choice_questions, short_answer_questions, numeric_questions
+    questions = [true_false_questions, single_choice_questions, short_answer_questions, numeric_questions]
+    dict_ = question_dictionary(questions)
+    return dict_
+
+
+def question_dictionary(questions):
+    question_dict = {}
+    for list_ in questions:
+        for q in list_:
+            answer_id = database.Answer.query.filter_by(id=q.id).all()
+            question_dict[q.id] = {
+                "question": q.question,
+                "answer": answer_id[0].correct_answer,
+                "incorrect_answer": answer_id[0].incorrect_answer
+            }
+    return question_dict
