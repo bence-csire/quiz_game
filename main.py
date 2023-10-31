@@ -1,9 +1,6 @@
 # Import order. Is it okay like this?
 # TODO: add requirements file
-from flask import Flask, render_template, url_for, redirect, session
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, BooleanField
-from wtforms.validators import InputRequired, Length, ValidationError
+from flask import Flask, render_template, url_for, redirect, session, flash
 from flask_bootstrap import Bootstrap5
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
@@ -12,6 +9,7 @@ import database
 import question
 import quiz
 import trivia
+import users
 
 # TODO: create an automatic job which gets questions from trivia. How many request can I make to TRIVIA a day?
 #  How many questions should I take daily? 50-100?
@@ -43,33 +41,11 @@ def logout():
     return redirect(url_for("home"))
 
 
-# TODO: create a new .py file for user (modularization)
-class RegisterForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min=4, max=100)], render_kw={"placeholder": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min=4, max=25)], render_kw={"placeholder": "Password"})
-    # TODO: admin is not visible, make it work
-    admin = BooleanField("Admin?")
-    submit = SubmitField("Register")
-    # TODO: popup for successful registration
-
-    def validate_username(self, username):
-        existing_user_username = database.User.query.filter_by(username=username.data).first()
-        if existing_user_username:
-            raise ValidationError("That username already exists. Please choose a different one.")
-
-
-class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min=4, max=100)], render_kw={"placeholder": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min=4, max=25)], render_kw={"placeholder": "Password"})
-    submit = SubmitField("Login")
-
-
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# TODO: After adding a question the input fields should be empty and give some feedback
 # TODO: make sure the added questions has the same string format (e.g Pascal or everything small)
 @app.route("/add", methods=["GET", "POST"])
 @login_required
@@ -80,30 +56,32 @@ def add():
             database.add_question(form.question.data, form.category.data, form.type_.data)
             new_question = database.Question.query.filter_by(question=form.question.data).first()
             database.add_answer(form.correct_answer.data, form.incorrect_answer.data, new_question.id)
-            return render_template("add.html", form=form)
+            flash("Question submitted successfully!", "success")
+            return redirect(url_for("add"))
         return render_template("add.html", form=form)
     else:
         return render_template("admin.html")
 
 
-# TODO: add the login form to the user.py file
+# TODO: add the login form to the users.py file
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    form = LoginForm()
+    form = users.LoginForm()
     if form.validate_on_submit():
         user = database.User.query.filter_by(username=form.username.data).first()
         # TODO: popup for wrong username/password
         if user:
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
-                return redirect(url_for("add"))
+                return redirect(url_for("choose_quiz"))
+        flash("Wrong username or password. Please try again.", "error")
     return render_template("login.html", form=form)
 
 
-# TODO: add the register form to the user.py file
+# TODO: add the register form to the users.py file
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    form = RegisterForm()
+    form = users.RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data)
         new_user = database.User(username=form.username.data, password=hashed_password, admin=form.admin.data)
@@ -117,8 +95,6 @@ def register():
 @login_required
 def choose_quiz():
     form = quiz.QuizCategorySelection()
-    # TODO: category should be the chosen one from the list
-
     if form.validate_on_submit():
         category = form.category.data
         questions_dict = quiz.create_quiz(category)
