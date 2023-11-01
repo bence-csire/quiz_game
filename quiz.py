@@ -7,47 +7,70 @@ import database
 
 
 class QuizCategorySelection(FlaskForm):
-    category = SelectField("Category", choices=[("All topics", "All topics"),
-                                                ("General Knowledge", "General Knowledge"),
-                                                ("Entertainment: Books", "Entertainment: Books"),
-                                                ("Entertainment: Film", "Entertainment: Film"),
-                                                ("Entertainment: Music", "Entertainment: Music"),
-                                                ("Entertainment: Musicals & Theatres",
-                                                 "Entertainment: Musicals & Theatres"),
-                                                ("Entertainment: Television", "Entertainment: Television"),
-                                                ("Entertainment: Video Games", "Entertainment: Video Games"),
-                                                ("Entertainment: Board Games", "Entertainment: Board Games"),
-                                                ("Science & Nature", "Science & Nature"),
-                                                ("Science: Computers", "Science: Computers"),
-                                                ("Science: Mathematics", "Science: Mathematics"),
-                                                ("Mythology", "Mythology"),
-                                                ("Sports", "Sports"),
-                                                ("Geography", "Geography"),
-                                                ("History", "History"),
-                                                ("Politics", "Politics"),
-                                                ("Art", "Art"),
-                                                ("Celebrities", "Celebrities"),
-                                                ("Animals", "Animals")],
-                           validators=[DataRequired()])
+    category = SelectField(
+        "Category",
+        choices=[
+            ("All topics", "All topics"),
+            ("General Knowledge", "General Knowledge"),
+            ("Entertainment: Books", "Entertainment: Books"),
+            ("Entertainment: Film", "Entertainment: Film"),
+            ("Entertainment: Music", "Entertainment: Music"),
+            ("Entertainment: Musicals & Theatres", "Entertainment: Musicals & Theatres"),
+            ("Entertainment: Television", "Entertainment: Television"),
+            ("Entertainment: Video Games", "Entertainment: Video Games"),
+            ("Entertainment: Board Games", "Entertainment: Board Games"),
+            ("Science & Nature", "Science & Nature"),
+            ("Science: Computers", "Science: Computers"),
+            ("Science: Mathematics", "Science: Mathematics"),
+            ("Mythology", "Mythology"),
+            ("Sports", "Sports"),
+            ("Geography", "Geography"),
+            ("History", "History"),
+            ("Politics", "Politics"),
+            ("Art", "Art"),
+            ("Celebrities", "Celebrities"),
+            ("Animals", "Animals")
+        ],
+        validators=[DataRequired()]
+    )
     submit = SubmitField("Submit")
 
-
-# class QuizForm(FlaskForm):
-#     select_field = SelectField('Choose an option', choices=[("True", "True"), ("False", "False")])
+# class QuizQuestion(SelectField):
+#     question = SelectField()
+#
+#
+#     def __init__(self, questions_dict):
+#         super(QuizForm, self).__init__()
+#         # self.questions.choices = [("True", "True")]
+#         print(questions_dict)
 
 
 class QuizForm(FlaskForm):
-    question1 = SelectField("question", choices=[("True", "True"), ("False", "False")])
-    question2 = SelectField("question", choices=[("True", "True"), ("False", "False")])
-    question3 = SelectField("question", choices=[("True", "True"), ("False", "False")])
-    question4 = SelectField("question", choices=[("True", "True"), ("False", "False")])
-    # TODO: the answers should be the correct and incorrect answers from answer table in a random order
-    question5 = SelectField("question", choices=[("True", "True"), ("False", "False")])
-    question6 = SelectField("question", choices=[("True", "True"), ("False", "False")])
-    question7 = StringField(render_kw={"placeholder": "question"})
-    question8 = StringField(render_kw={"placeholder": "question"})
-    question9 = StringField(render_kw={"placeholder": "question"})
-    question10 = StringField(render_kw={"placeholder": "question"})
+
+    questions = SelectField()
+    # question_list = QuizQuestion[]
+
+    def __init__(self, questions_dict):
+        super(QuizForm, self).__init__()
+        # self.questions.choices = [("True", "True")]
+        for key, value in questions_dict.items():
+            self.questions.name = [value["question"]]
+            self.questions.choices = [value["correct_answer"]]
+        print(questions_dict)
+
+
+        # for key, value in questions_dict.items():
+        #     question = SelectField(value["question"], choices=[("True", "True"), ("False", "False")])
+        #     self.questions.append(question)
+
+
+# class QuizForm(FlaskForm):
+#     question_true_false = SelectField(choices=[("True", "True"), ("False", "False")])
+    # question_single_choice = SelectField("question", choices=[("True", "True"), ("False", "False")])
+    # question_short_answer = StringField(render_kw={"placeholder": "question"})
+    # question_numeric = StringField(render_kw={"placeholder": "question"})
+    # # TODO: the answers should be the correct and incorrect answers from answer table in a random order
+
 
 
 # TODO: if all topics then choose from everywhere
@@ -80,12 +103,15 @@ def create_quiz(category):
 
 def question_dictionary(questions):
     question_dict = {}
+    i = 0
     for list_ in questions:
         for q in list_:
             answer_id = database.Answer.query.filter_by(id=q.id).all()
-            question_dict[q.id] = {
+            question_dict[i] = {
                 "question": q.question,
-                "answer": answer_id[0].correct_answer,
+                "correct_answer": answer_id[0].correct_answer,
                 "incorrect_answer": answer_id[0].incorrect_answer
             }
+            i += 1
+    print(question_dict)
     return question_dict

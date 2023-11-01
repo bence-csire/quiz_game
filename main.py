@@ -47,20 +47,20 @@ def home():
 
 
 # TODO: make sure the added questions has the same string format (e.g Pascal or everything small)
+# TODO: if not instead of if, less indentation
 @app.route("/add", methods=["GET", "POST"])
 @login_required
 def add():
-    if current_user.admin:
-        form = question.QuestionForm()
-        if form.validate_on_submit():
-            database.add_question(form.question.data, form.category.data, form.type_.data)
-            new_question = database.Question.query.filter_by(question=form.question.data).first()
-            database.add_answer(form.correct_answer.data, form.incorrect_answer.data, new_question.id)
-            flash("Question submitted successfully!", "success")
-            return redirect(url_for("add"))
-        return render_template("add.html", form=form)
-    else:
+    if not current_user.admin:
         return render_template("admin.html")
+    form = question.QuestionForm()
+    if form.validate_on_submit():
+        database.add_question(form.question.data, form.category.data, form.type_.data)
+        new_question = database.Question.query.filter_by(question=form.question.data).first()
+        database.add_answer(form.correct_answer.data, form.incorrect_answer.data, new_question.id)
+        flash("Question submitted successfully!", "success")
+        return redirect(url_for("add"))
+    return render_template("add.html", form=form)
 
 
 # TODO: add the login form to the users.py file
@@ -95,6 +95,7 @@ def register():
 @login_required
 def choose_quiz():
     form = quiz.QuizCategorySelection()
+    print(form.category)
     if form.validate_on_submit():
         category = form.category.data
         questions_dict = quiz.create_quiz(category)
@@ -107,7 +108,8 @@ def choose_quiz():
 @login_required
 def play_quiz():
     questions_dictionary = session.get("questions_dict")
-    form = quiz.QuizForm()
+    form = quiz.QuizForm(questions_dictionary)
+    print(form.questions)
     return render_template("play.html", form=form, questions_dictionary=questions_dictionary)
 
 

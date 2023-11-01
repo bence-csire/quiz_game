@@ -65,7 +65,7 @@ class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.String(100), nullable=False)
     random = db.Column(db.Boolean, nullable=False)
-    # Should it be ID or Question? How can I call it?
+    # TODO: create a list, instead of 10 questions
     question1 = db.Column(db.Integer, db.ForeignKey("question.id"))
     question2 = db.Column(db.Integer, db.ForeignKey("question.id"))
     question3 = db.Column(db.Integer, db.ForeignKey("question.id"))
