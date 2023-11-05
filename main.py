@@ -4,7 +4,6 @@ from flask import Flask, render_template, url_for, redirect, session, flash
 from flask_bootstrap import Bootstrap5
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
-from flask_wtf.csrf import CSRFProtect
 
 import database
 import question
@@ -23,7 +22,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///questions.db"
 database.init_app(app)
 Bootstrap5(app)
 bcrypt = Bcrypt(app)
-csrf = CSRFProtect(app)
 app.config["WTF_CSRF_ENABLED"] = True
 
 login_manager = LoginManager()
@@ -114,8 +112,10 @@ def play_quiz():
     quiz.populate_quizform(questions_dictionary)
     form = quiz.QuizForm()
     if form.validate_on_submit():
+        quiz.clean_quizform(questions_dictionary)
         i = 0
         score = 0
+        print(form.data)
         for key, value in form.data.items():
             if key != 'csrf_token':
                 if value == questions_dictionary[str(i)]["correct_answer"]:

@@ -63,6 +63,14 @@ def populate_quizform(questions_dict):
             setattr(QuizForm, value["question"], StringField(value["question"]))
 
 
+def clean_quizform(questions_dict):
+    for key, value in questions_dict.items():
+        if int(key) < 6:
+            delattr(QuizForm, value["question"])
+        else:
+            delattr(QuizForm, value["question"])
+
+
 # TODO: if all topics then choose from everywhere
 # TODO: Check if it is possible to simplify it?
 # TODO: Add function where admin user can submit quiz by giving question ID-s (not random)
