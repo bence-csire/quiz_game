@@ -35,42 +35,32 @@ class QuizCategorySelection(FlaskForm):
     )
     submit = SubmitField("Submit")
 
-# class QuizQuestion(SelectField):
-#     question = SelectField()
+# class QuizForm(FlaskForm):
 #
+#     questions = SelectField()
+#     # question_list = QuizQuestion[]
 #
 #     def __init__(self, questions_dict):
 #         super(QuizForm, self).__init__()
 #         # self.questions.choices = [("True", "True")]
+#         for key, value in questions_dict.items():
+#             self.questions.name = [value["question"]]
+#             self.questions.choices = [value["correct_answer"]]
 #         print(questions_dict)
 
 
 class QuizForm(FlaskForm):
-
-    questions = SelectField()
-    # question_list = QuizQuestion[]
-
-    def __init__(self, questions_dict):
-        super(QuizForm, self).__init__()
-        # self.questions.choices = [("True", "True")]
-        for key, value in questions_dict.items():
-            self.questions.name = [value["question"]]
-            self.questions.choices = [value["correct_answer"]]
-        print(questions_dict)
+    pass
 
 
-        # for key, value in questions_dict.items():
-        #     question = SelectField(value["question"], choices=[("True", "True"), ("False", "False")])
-        #     self.questions.append(question)
-
-
-# class QuizForm(FlaskForm):
-#     question_true_false = SelectField(choices=[("True", "True"), ("False", "False")])
-    # question_single_choice = SelectField("question", choices=[("True", "True"), ("False", "False")])
-    # question_short_answer = StringField(render_kw={"placeholder": "question"})
-    # question_numeric = StringField(render_kw={"placeholder": "question"})
-    # # TODO: the answers should be the correct and incorrect answers from answer table in a random order
-
+def populate_quizform(questions_dict):
+    for key, value in questions_dict.items():
+        if int(key) < 6:
+            setattr(QuizForm, value["question"],
+                    SelectField(value["question"],
+                                choices=[(answers, answers) for answers in value["answers"]]))
+        else:
+            setattr(QuizForm, value["question"], StringField(value["question"]))
 
 
 # TODO: if all topics then choose from everywhere
@@ -107,11 +97,13 @@ def question_dictionary(questions):
     for list_ in questions:
         for q in list_:
             answer_id = database.Answer.query.filter_by(id=q.id).all()
+            all_answers = answer_id[0].incorrect_answer.split(', ')
+            all_answers.append(answer_id[0].correct_answer)
+            sorted_answers = sorted(all_answers)
             question_dict[i] = {
                 "question": q.question,
                 "correct_answer": answer_id[0].correct_answer,
-                "incorrect_answer": answer_id[0].incorrect_answer
+                "answers": [answer for answer in sorted_answers]
             }
             i += 1
-    print(question_dict)
     return question_dict

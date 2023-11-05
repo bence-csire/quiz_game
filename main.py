@@ -4,6 +4,7 @@ from flask import Flask, render_template, url_for, redirect, session, flash
 from flask_bootstrap import Bootstrap5
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
+from flask_wtf.csrf import CSRFProtect
 
 import database
 import question
@@ -22,6 +23,8 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///questions.db"
 database.init_app(app)
 Bootstrap5(app)
 bcrypt = Bcrypt(app)
+csrf = CSRFProtect(app)
+app.config["WTF_CSRF_ENABLED"] = True
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -95,7 +98,6 @@ def register():
 @login_required
 def choose_quiz():
     form = quiz.QuizCategorySelection()
-    print(form.category)
     if form.validate_on_submit():
         category = form.category.data
         questions_dict = quiz.create_quiz(category)
@@ -104,13 +106,32 @@ def choose_quiz():
     return render_template("quiz.html", form=form)
 
 
+# TODO: HTML styling
 @app.route("/play", methods=["GET", "POST"])
 @login_required
 def play_quiz():
     questions_dictionary = session.get("questions_dict")
-    form = quiz.QuizForm(questions_dictionary)
-    print(form.questions)
+    quiz.populate_quizform(questions_dictionary)
+    form = quiz.QuizForm()
+    if form.validate_on_submit():
+        i = 0
+        score = 0
+        for key, value in form.data.items():
+            if key != 'csrf_token':
+                if value == questions_dictionary[str(i)]["correct_answer"]:
+                    score += 1
+                i += 1
+        # TODO: Show the user answer and correct answer too, not only the score
+        session["score"] = score
+        return redirect(url_for("score"))
     return render_template("play.html", form=form, questions_dictionary=questions_dictionary)
+
+
+@app.route("/score")
+@login_required
+def score():
+    user_score = session.get("score")
+    return render_template("score.html", user_score=user_score)
 
 
 with app.app_context():
@@ -118,4 +139,4 @@ with app.app_context():
     trivia.add()
 
 if __name__ == "__main__":
-    app.run()
+    app.run(port=5001)

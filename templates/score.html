@@ -6,9 +6,9 @@
 <div class="container">
   <div class="row">
     <div class="col-sm-12 col-md-8">
-      <h1>Choose your quiz category</h1>
+      <h1>Good Job!</h1>
 
-      {{ render_form(form, novalidate=True) }}
+        <h2>Your result is {{ user_score }}/10</h2>
 
       <p class="space-above">
         <a href="{{ url_for('home') }}">Homepage</a>

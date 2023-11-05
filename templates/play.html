@@ -8,12 +8,16 @@
     <div class="col-sm-12 col-md-8">
       <h1>Play quiz! Enjoy!</h1>
 
-<!--        {% for key, value in questions_dictionary.items() %}-->
-        <p class="space-above">
-<!--          {{ value["question"] }}-->
-        </p>
-        {{ form.questions }}
-<!--        {% endfor %}-->
+        <form method="POST">
+            {% for field in form if field.name != 'csrf_token' %}
+                <div>
+                    <label>{{ field.label }}</label>
+                    {{ field }}
+                </div>
+            {% endfor %}
+            {{ form.csrf_token }}
+            <input class="btn btn-primary btn-md" id="submit" name="submit" type="submit" value="Submit">
+        </form>
 
       <p class="space-above">
         <a href="{{ url_for('home') }}">Homepage</a>
